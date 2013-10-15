@@ -13,8 +13,6 @@ func (t TextEditorActivity) Start(connection *nadeshiko.Connection) {
 	x := 0
 	y := 0
 
-	show_cursor := false
-
 	line_id := fmt.Sprintf("line%d", y)
 	line_div := fmt.Sprintf("<div id='%s'></div>", line_id)
 	jquery_line_id := "#" + line_id
@@ -25,6 +23,7 @@ func (t TextEditorActivity) Start(connection *nadeshiko.Connection) {
 
 	go func() {
 		c := time.Tick(500 * time.Millisecond)
+		show_cursor := false
 		for _ = range c {
 			show_cursor = !show_cursor
 			if show_cursor {
