@@ -1,59 +1,79 @@
 package main
 
-import "./nadeshiko"
+import (
+	"log"
+
+	"github.com/kirillrdy/nadeshiko"
+)
 import "fmt"
 import "time"
-import "strconv"
 
 type TextEditorActivity struct {
 }
 
+func blinkCursor(connection *nadeshiko.Connection) {
+	tick := time.Tick(500 * time.Millisecond)
+	show_cursor := false
+	for _ = range tick {
+		show_cursor = !show_cursor
+		if show_cursor {
+			connection.JQuery("#cursor").SetText("|")
+		} else {
+			connection.JQuery("#cursor").SetText("")
+		}
+	}
+}
+
+func moveCursorToLine(connection *nadeshiko.Connection, line_number int) {
+	line_id := fmt.Sprintf("line%d", line_number)
+	cursor_div := "<span id='cursor'>|</span>"
+	connection.JQuery("#cursor").Remove()
+	connection.JQuery("#" + line_id).Append(cursor_div)
+}
+
+func addNewLine(connection *nadeshiko.Connection, line_number int) {
+	line_id := fmt.Sprintf("line%d", line_number)
+	line_div := fmt.Sprintf("<div id='%s'></div>", line_id)
+	connection.JQuery("body").Append(line_div)
+}
+
+const UP_KEY = 38
+const DOWN_KEY = 40
+
 func (t TextEditorActivity) Start(connection *nadeshiko.Connection) {
 
-	x := 0
 	y := 0
 
-	line_id := fmt.Sprintf("line%d", y)
-	line_div := fmt.Sprintf("<div id='%s'></div>", line_id)
-	jquery_line_id := "#" + line_id
-	connection.JQuery("body").Append(line_div)
-
-	cursor_div := "<span id='cursor'>|</span>"
-	connection.JQuery(jquery_line_id).Append(cursor_div)
+	addNewLine(connection, y)
+	moveCursorToLine(connection, y)
 
 	go func() {
-		c := time.Tick(500 * time.Millisecond)
-		show_cursor := false
-		for _ = range c {
-			show_cursor = !show_cursor
-			if show_cursor {
-				connection.JQuery("#cursor").SetText("|")
-			} else {
-				connection.JQuery("#cursor").SetText("")
-			}
-		}
+		blinkCursor(connection)
 	}()
 
 	connection.JQuery("body").Keydown(func(key int) {
-		if strconv.IsPrint(rune(key)) {
-			x = x + 1
-			span_to_add := fmt.Sprintf("<span>%s</span>", string(key))
-			connection.JQuery("#cursor").Before(span_to_add)
-		}
+
+		log.Printf("key: %d \n", key)
+
 		if key == 13 {
 			y = y + 1
-			line_id := fmt.Sprintf("line%d", y)
-			line_div := fmt.Sprintf("<div id='%s'></div>", line_id)
-			jquery_line_id := "#" + line_id
-			connection.JQuery("body").Append(line_div)
-			connection.JQuery("#cursor").Remove()
-			connection.JQuery(jquery_line_id).Append(cursor_div)
-			x = 0
+			addNewLine(connection, y)
+			moveCursorToLine(connection, y)
 		} else if key == 8 {
 			connection.JQuery("#cursor").PrevRemove()
-		} else {
-
+		} else if key == UP_KEY {
+			y = y - 1
+			moveCursorToLine(connection, y)
+		} else if key == DOWN_KEY {
+			y = y + 1
+			moveCursorToLine(connection, y)
 		}
+	})
+
+	connection.JQuery("body").Keypress(func(key int) {
+
+		span_to_add := fmt.Sprintf("<span>%s</span>", string(key))
+		connection.JQuery("#cursor").Before(span_to_add)
 	})
 }
 
