@@ -1,14 +1,20 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"time"
 
 	"github.com/kirillrdy/nadeshiko"
 )
-import "fmt"
-import "time"
+
+type TextBuffer struct {
+	storage []byte
+}
 
 type TextEditorActivity struct {
+	buffer TextBuffer
+	x, y   int
 }
 
 func blinkCursor(connection *nadeshiko.Connection) {
@@ -52,22 +58,7 @@ func (t TextEditorActivity) Start(connection *nadeshiko.Connection) {
 	}()
 
 	connection.JQuery("body").Keydown(func(key int) {
-
-		log.Printf("key: %d \n", key)
-
-		if key == 13 {
-			y = y + 1
-			addNewLine(connection, y)
-			moveCursorToLine(connection, y)
-		} else if key == 8 {
-			connection.JQuery("#cursor").PrevRemove()
-		} else if key == UP_KEY {
-			y = y - 1
-			moveCursorToLine(connection, y)
-		} else if key == DOWN_KEY {
-			y = y + 1
-			moveCursorToLine(connection, y)
-		}
+		onKeyDown(connection, key)
 	})
 
 	connection.JQuery("body").Keypress(func(key int) {
@@ -75,6 +66,24 @@ func (t TextEditorActivity) Start(connection *nadeshiko.Connection) {
 		span_to_add := fmt.Sprintf("<span>%s</span>", string(key))
 		connection.JQuery("#cursor").Before(span_to_add)
 	})
+}
+
+func onKeyDown(connection *nadeshiko.Connection, key int) {
+	log.Printf("key: %d \n", key)
+
+	if key == 13 {
+		y = y + 1
+		addNewLine(connection, y)
+		moveCursorToLine(connection, y)
+	} else if key == 8 {
+		connection.JQuery("#cursor").PrevRemove()
+	} else if key == UP_KEY {
+		y = y - 1
+		moveCursorToLine(connection, y)
+	} else if key == DOWN_KEY {
+		y = y + 1
+		moveCursorToLine(connection, y)
+	}
 }
 
 func main() {
