@@ -17,8 +17,8 @@ func (activity TextEditorActivity) Start(connection *nadeshiko.Connection) {
 	//	blinkCursor(connection)
 	//}()
 
-	for i := 0; i < 100; i++ {
-		connection.JQuery("body").Append(fmt.Sprintf("<div id='%d'></div>", i))
+	for i := 0; i < textBuffer.NumberOfLines(); i++ {
+		connection.JQuery("body").Append(fmt.Sprintf("<div id='%d'>%s</div>", i, textBuffer.Line(i)))
 	}
 
 	event := nadeshiko.EventSubscription{EventName: "editor_update", Connection: connection}
@@ -33,6 +33,7 @@ func (activity TextEditorActivity) Start(connection *nadeshiko.Connection) {
 	})
 }
 
+const BACK_SPACE = 8
 const LEFT_KEY = 37
 const UP_KEY = 38
 const RIGHT_KEY = 39
@@ -57,13 +58,18 @@ func onKeyDown(connection *nadeshiko.Connection, key int) {
 	//}
 }
 
+func (activity TextEditorActivity) updateLine(line_number int) {
+
+	nadeshiko.TriggerEvent("editor_update", func(connection *nadeshiko.Connection) {
+		connection.JQuery(fmt.Sprintf("#%d", line_number)).SetText(textBuffer.data[line_number])
+	})
+}
+
 func (activity *TextEditorActivity) onKeyPress(old_connection *nadeshiko.Connection, key int) {
 	textBuffer.InsertChar(activity.cursor.x, activity.cursor.y, key)
 	activity.cursor.x += 1
 
-	nadeshiko.TriggerEvent("editor_update", func(connection *nadeshiko.Connection) {
-		connection.JQuery(fmt.Sprintf("#%d", activity.cursor.y)).SetText(textBuffer.data[activity.cursor.y])
-	})
+	activity.updateLine(activity.cursor.y)
 
 	log.Printf("key press: %s \n", string(key))
 }
