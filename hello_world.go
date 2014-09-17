@@ -1,6 +1,6 @@
 package main
 
-import "./nadeshiko"
+import "github.com/kirillrdy/nadeshiko"
 
 type HelloWorldActivity struct {
 	Greeting string
@@ -11,5 +11,5 @@ func (a HelloWorldActivity) Start(connection *nadeshiko.Connection) {
 }
 
 func main() {
-	nadeshiko.Start(HelloWorldActivity{Greeting: "Hello World"})
+	nadeshiko.StartActivity(HelloWorldActivity{Greeting: "Hello World"})
 }
