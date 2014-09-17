@@ -11,6 +11,8 @@ type TextEditorActivity struct {
 	cursor Cursor
 }
 
+var clients []*nadeshiko.Connection
+
 func (activity TextEditorActivity) Start(connection *nadeshiko.Connection) {
 
 	//go func() {
@@ -21,8 +23,7 @@ func (activity TextEditorActivity) Start(connection *nadeshiko.Connection) {
 		connection.JQuery("body").Append(fmt.Sprintf("<div id='%d'>%s</div>", i, textBuffer.Line(i)))
 	}
 
-	event := nadeshiko.EventSubscription{EventName: "editor_update", Connection: connection}
-	nadeshiko.SubscribeToEvent <- event
+	clients = append(clients, connection)
 
 	connection.JQuery("body").Keydown(func(key int) {
 		onKeyDown(connection, key)
@@ -60,9 +61,9 @@ func onKeyDown(connection *nadeshiko.Connection, key int) {
 
 func (activity TextEditorActivity) updateLine(line_number int) {
 
-	nadeshiko.TriggerEvent("editor_update", func(connection *nadeshiko.Connection) {
-		connection.JQuery(fmt.Sprintf("#%d", line_number)).SetText(textBuffer.data[line_number])
-	})
+	for _, client := range clients {
+		client.JQuery(fmt.Sprintf("#%d", line_number)).SetText(textBuffer.data[line_number])
+	}
 }
 
 func (activity *TextEditorActivity) onKeyPress(old_connection *nadeshiko.Connection, key int) {
