@@ -9,12 +9,14 @@ import (
 )
 
 func handler(response http.ResponseWriter, request *http.Request) {
-	page := html.Html{
-		Title: "Todo App",
-		Body: []html.Node{
+	page := html.Html().Children(
+		html.Head().Children(
+			html.Title().Text("Todo App"),
+		),
+		html.Body().Children(
 			html.H1().Text("Hello World"),
-		},
-	}
+		),
+	)
 	io.WriteString(response, page.String())
 }
 
